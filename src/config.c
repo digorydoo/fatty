@@ -22,9 +22,9 @@ const config default_cfg = {
   // Looks
   .fg_colour = 0xBFBFBF,
   .bg_colour = 0x000000,
-  .tab_fg_colour = 0x00FF00,
-  .tab_bg_colour = 0x000000,
-  .tab_active_bg_colour = 0x323232,
+  .tab_fg_colour = 0xFFFFFF,
+  .tab_bg_colour = 0x242424,
+  .tab_active_bg_colour = 0x000000,
   .tab_attention_bg_colour = 0x003200,
   .cursor_colour = 0xBFBFBF,
   .transparency = 0,

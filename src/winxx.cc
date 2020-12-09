@@ -299,22 +299,34 @@ static void set_tab_bar_visibility(bool b) {
 int win_tab_height() { return tab_bar_visible ? tabheight() : 0; }
 
 static int tab_font_size() {
-    return 14 * g_yscale;
+    return 15 * g_yscale;
 }
 
 static HGDIOBJ new_tab_font() {
     return CreateFont(tab_font_size(),0,0,0,FW_NORMAL,0,0,0,1,0,0,CLEARTYPE_QUALITY,0,0);
 }
 
+/*
 static HGDIOBJ new_active_tab_font() {
     return CreateFont(tab_font_size(),0,0,0,FW_BOLD,0,0,0,1,0,0,CLEARTYPE_QUALITY,0,0);
 }
+*/
 
 // paint a tab to dc (where dc draws to buffer)
-static void paint_tab(HDC dc, int width, int tabheight, const Tab& tab) {
+static void paint_tab(HDC dc, int width, int tabheight, const Tab& tab, bool isActive, bool isFirst) {
     MoveToEx(dc, 0, tabheight, nullptr);
-    LineTo(dc, 0, 0);
-    LineTo(dc, width, 0);
+
+    if (!isFirst || isActive) {
+        LineTo(dc, 0, 0);
+    }
+
+    if (isActive) {
+        LineTo(dc, width, 0);
+    } else {
+        MoveToEx(dc, 0, tabheight, nullptr);
+        LineTo(dc, width, tabheight);
+    }
+
     TextOutW(dc, width/2, (tabheight - tab_font_size()) / 2, tab.info.titles[tab.info.titles_i].data(), tab.info.titles[tab.info.titles_i].size());
 }
 
@@ -347,14 +359,16 @@ void win_paint_tabs(HDC dc, int width) {
     RECT tabrect;
     SetRect(&tabrect, 0, 0, tabwidth, loc_tabheight+1);
 
+    const auto strokeColor = 0x525252;
+    const auto inactiveTextColor = 0x808080;
+
     HDC bufdc = CreateCompatibleDC(dc);
     SetBkMode(bufdc, TRANSPARENT);
-    SetTextColor(bufdc, fg);
     SetTextAlign(bufdc, TA_CENTER);
     {
         auto brush = CreateSolidBrush(bg);
         auto obrush = SelectWObj(bufdc, brush);
-        auto open = SelectWObj(bufdc, CreatePen(PS_SOLID, 0, fg));
+        auto open = SelectWObj(bufdc, CreatePen(PS_SOLID, 0, strokeColor));
         auto obuf = SelectWObj(bufdc,
                 CreateCompatibleBitmap(dc, tabwidth, tabheight()));
 
@@ -375,12 +389,12 @@ void win_paint_tabs(HDC dc, int width) {
             }
 
             if (active) {
-                auto _f = SelectWObj(bufdc, new_active_tab_font());
-                paint_tab(bufdc, tabwidth, loc_tabheight, tabs[i]);
+                SetTextColor(bufdc, fg);
+                // auto _f = SelectWObj(bufdc, new_active_tab_font());
+                paint_tab(bufdc, tabwidth, loc_tabheight, tabs[i], true, i == 0);
             } else {
-                MoveToEx(bufdc, 0, loc_tabheight, nullptr);
-                LineTo(bufdc, tabwidth, loc_tabheight);
-                paint_tab(bufdc, tabwidth, loc_tabheight, tabs[i]);
+                SetTextColor(bufdc, inactiveTextColor);
+                paint_tab(bufdc, tabwidth, loc_tabheight, tabs[i], false, i == 0);
             }
 
             BitBlt(dc, i*tabwidth+PADDING, PADDING, tabwidth, tabheight(),
