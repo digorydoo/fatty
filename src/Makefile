@@ -49,7 +49,16 @@ $(BUILD_DIR)%.o: %.c Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(compileflags)
 $(BUILD_DIR)%.o: %.rc
 	@$(prepare_build)
-	$(RC) --preprocessor '$(CC) -E -xc -DRC_INVOKED -MMD -MT $@ $(CPPFLAGS)' $< $*.o
+	$(RC) --preprocessor '$(CC)' \
+		--preprocessor-arg '-E' \
+		--preprocessor-arg '-xc' \
+		--preprocessor-arg '-DRC_INVOKED' \
+		--preprocessor-arg '-MMD' \
+		--preprocessor-arg '-MT' \
+		--preprocessor-arg "$@" \
+		--preprocessor-arg "-DTARGET=$(TARGET)" \
+		--preprocessor-arg "-D_GNU_SOURCE" \
+		$< $*.o
 	@mv -v res.o res.d $(BUILD_DIR)
 
 .PHONY: clean
